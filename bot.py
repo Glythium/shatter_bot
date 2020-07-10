@@ -138,7 +138,7 @@ class Bot(commands.Bot):
         if any(word in ctx.content.lower() for word in ("hello", "hi", "heya")):
             await ctx.channel.send(f"Hi, @{ctx.author.name}!")
         elif any(word in ctx.content.lower() for word in ("bye", "goodnight")):
-            await ctx.shannel.send(f"Bye, @{ctx.author.name}")
+            await ctx.channel.send(f"Bye, @{ctx.author.name}")
 
 
 ############################## Commands #######################################
