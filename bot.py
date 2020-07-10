@@ -33,11 +33,27 @@ class Bot(commands.Bot):
 ############################## Commands #######################################
     @commands.command(name='help')
     async def help(self, ctx):
+        # Usage statement???
         await ctx.send(f"There's no help for you, @{ctx.author.name}")
-
 
     @commands.command(name='clip')
     async def clip(self, ctx):
+        # Make a clip
+        await ctx.send(f"Coming Soon!")
+
+    @commands.command(name='roll')
+    async def roll(self, ctx):
+        # Some kind of RNG
+        await ctx.send(f"Coming Soon!")
+    
+    @commands.command(name="goodBot")
+    async def goodBot(self, ctx):
+        # Bots need lovin'
+        await ctx.send(f"Coming Soon!")
+    
+    @commands.command(name="badBot")
+    async def badBot(self, ctx):
+        # Bots need hatin'
         await ctx.send(f"Coming Soon!")
 
 
