@@ -136,7 +136,12 @@ class Bot(commands.Bot):
 
     @commands.command(name='roll')
     async def roll(self, ctx):
-        await ctx.send(f"@{ctx.author.name} rolled a {random.randint(1,6)}!")
+        try:
+            args = ctx.content.lower().split()
+            number = int(args[1])
+            await ctx.send(f"@{ctx.author.name} rolled a {random.randint(1,number)}!")
+        except:
+            await ctx.send(f"Usage: !roll <number>")
     
     @commands.command(name="goodBot")
     async def goodBot(self, ctx):
@@ -150,6 +155,7 @@ class Bot(commands.Bot):
     
     @commands.command(name='cooldown')
     async def setCooldown(self, ctx):
+        # Set a new cooldown timer
         if ctx.author.is_mod:
             args = ctx.content.lower().split()
             number = int(args[1])
