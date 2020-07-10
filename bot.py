@@ -135,9 +135,9 @@ class Bot(commands.Bot):
                 await ctx.channel.send(f"{random.choice(self.quips)} {self.randShoutout(ctx.author.name)}")
 
         # Always say hi and bye if prompted.
-        if 'hello' in ctx.content.lower():
+        if any(word in ctx.content.lower() for word in ("hello", "hi", "heya")):
             await ctx.channel.send(f"Hi, @{ctx.author.name}!")
-        elif 'bye' in ctx.content.lower():
+        elif any(word in ctx.content.lower() for word in ("bye", "goodnight")):
             await ctx.shannel.send(f"Bye, @{ctx.author.name}")
 
 
