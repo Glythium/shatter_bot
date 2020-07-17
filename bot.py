@@ -95,6 +95,13 @@ class Bot(commands.Bot):
             "What's your favorite videogame",
             "Which Pokemon would you eat, if you could"
         ]
+        self.marioTime = [
+            "It's a me, shatter_bot!",
+            "It's a Mario time!",
+            "I'm ready for some Mario Maker?",
+            "Mama Luigi!",
+            "Kill the Yoshis!"
+        ]
         self.goodWords = [
             "love ",
             "good ",
@@ -167,6 +174,13 @@ class Bot(commands.Bot):
         except:
             await ctx.send(f"Usage: !roll <number>")
     
+    @commands.command(name="mm")
+    async def marioTime(self, ctx):
+        'Turns on or off the ability to use the Mario Maker level queue commands'
+        self.isPlayingMario = not self.isPlayingMario
+        if self.isPlayingMario:
+            await ctx.send(f"{random.choice(self.marioTime)}")
+
     @commands.command(name="modLevels")
     async def modLevels(self, ctx):
         'Turns on or off the ability for non-mods to add levels to the queue'
