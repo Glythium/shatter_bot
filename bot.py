@@ -48,6 +48,7 @@ class Bot(commands.Bot):
         self.cooldownMgr = CoolDownManager(5)
         self.levelQueue = []
         self.canAddLevels = True
+        self.isPlayingMario = False
 
 ######################### Personality #########################################
         self.catchPhrases = [
@@ -169,41 +170,45 @@ class Bot(commands.Bot):
     @commands.command(name="modLevels")
     async def modLevels(self, ctx):
         'Turns on or off the ability for non-mods to add levels to the queue'
-        if ctx.author.is_mod:
-            self.canAddLevels = not self.canAddLevels
-        else:
-            await self._noPerms(ctx)
+        if self.isPlayingMario:
+            if ctx.author.is_mod:
+                self.canAddLevels = not self.canAddLevels
+            else:
+                await self._noPerms(ctx)
 
     @commands.command(name="add")
     async def addLevel(self, ctx):
         'Adds a level code to the queue'
-        if self.canAddLevels or ctx.author.is_mod:
-            if len(self.levelQueue) < 5:
-                args = ctx.content.split()
-                code = args[1]
-                self.levelQueue.append(code)
-                await ctx.send(f"Your level is now in the queue {self.randShoutout(ctx.author.name)}")
+        if self.isPlayingMario:
+            if self.canAddLevels or ctx.author.is_mod:
+                if len(self.levelQueue) < 5:
+                    args = ctx.content.split()
+                    code = args[1]
+                    self.levelQueue.append(code)
+                    await ctx.send(f"Your level is now in the queue {self.randShoutout(ctx.author.name)}")
+                else:
+                    await ctx.send(f"The level queue is full, try again later {self.randShoutout(ctx.author.name)}")
             else:
-                await ctx.send(f"The level queue is full, try again later {self.randShoutout(ctx.author.name)}")
-        else:
-            await ctx.send(f"The queue is not currently accepting new levels {self.randShoutout(ctx.author.name)}")
+                await ctx.send(f"The queue is not currently accepting new levels {self.randShoutout(ctx.author.name)}")
 
     @commands.command(name="level")
     async def currentLevel(self, ctx):
         'Displays the current level code'
-        await self._currentLevel(ctx)
+        if self.isPlayingMario:
+            await self._currentLevel(ctx)
     
     @commands.command(name="nextLevel")
     async def nextLevel(self, ctx):
         'Pops the level off the queue and displays the next value'
-        if ctx.author.is_mod:
-            if len(self.levelQueue) > 0:
-                self.levelQueue.pop(0)
-                await self._currentLevel(ctx)
+        if self.isPlayingMario:
+            if ctx.author.is_mod:
+                if len(self.levelQueue) > 0:
+                    self.levelQueue.pop(0)
+                    await self._currentLevel(ctx)
+                else:
+                    await ctx.send(f"The level queue is empty {self.randShoutout(ctx.author.name)}")
             else:
-                await ctx.send(f"The level queue is empty {self.randShoutout(ctx.author.name)}")
-        else:
-            await self._noPerms(ctx)
+                await self._noPerms(ctx)
     
     @commands.command(name="goodBot")
     async def goodBot(self, ctx):
