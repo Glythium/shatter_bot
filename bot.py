@@ -46,6 +46,8 @@ class Bot(commands.Bot):
             initial_channels=[os.environ['CHANNEL']]
         )
         self.cooldownMgr = CoolDownManager(5)
+        self.levelQueue = []
+        self.canAddLevels = True
 
 ######################### Personality #########################################
         self.catchPhrases = [
@@ -80,32 +82,38 @@ class Bot(commands.Bot):
             "Bite me",
             "Oooo, yes...harder"
         ]
+        self.noPerms = [
+            "You're not my supervisor",
+            "Whatever, I do what I want",
+            "Not right now, I have a headache",
+            "I can't let you do that",
+            "You don't have enough badges to train me",
+            "No, no, a thousand times no"
+        ]
         self.iceBreakers = [
             "What's your favorite videogame",
             "Which Pokemon would you eat, if you could"
         ]
         self.goodWords = [
-            "like",
-            "love",
-            "good",
-            "great",
-            "awesome",
-            "best",
-            "right",
-            "cheer",
-            "chat"
+            "love ",
+            "good ",
+            "great ",
+            "awesome ",
+            "best ",
+            "right ",
+            "cheer ",
+            "chat "
         ]
         self.badWords = [
-            "bad",
-            "worse",
-            "worst",
-            "terrible",
-            "horrible",
-            "awful",
-            "hate",
-            "suck",
-            "stink",
-            "problem"
+            "bad ",
+            "worse ",
+            "worst ",
+            "terrible ",
+            "horrible ",
+            "awful ",
+            "hate ",
+            "suck ",
+            "stink ",
         ]
 
 ################################ Actual Functions #############################
@@ -126,6 +134,7 @@ class Bot(commands.Bot):
         
         # Always handle commands as they come in.
         await bot.handle_commands(ctx)
+        print(f"{ctx.content}")
 
         # Don't interact with chat if you're on cool down.
         if self.cooldownMgr.isCool():
@@ -135,9 +144,9 @@ class Bot(commands.Bot):
                 await ctx.channel.send(f"{random.choice(self.quips)} {self.randShoutout(ctx.author.name)}")
 
         # Always say hi and bye if prompted.
-        if any(word in ctx.content.lower() for word in ("hello", "hi", "heya")):
+        if any(word in ctx.content.lower() for word in ("hello ", "hi ", "heya ")):
             await ctx.channel.send(f"Hi, @{ctx.author.name}!")
-        elif any(word in ctx.content.lower() for word in ("bye", "goodnight")):
+        elif any(word in ctx.content.lower() for word in ("bye ", "goodnight ")):
             await ctx.channel.send(f"Bye, @{ctx.author.name}")
 
 
@@ -156,6 +165,45 @@ class Bot(commands.Bot):
             await ctx.send(f"@{ctx.author.name} rolled a {random.randint(1,number)}!")
         except:
             await ctx.send(f"Usage: !roll <number>")
+    
+    @commands.command(name="modLevels")
+    async def modLevels(self, ctx):
+        'Turns on or off the ability for non-mods to add levels to the queue'
+        if ctx.author.is_mod:
+            self.canAddLevels = not self.canAddLevels
+        else:
+            await self._noPerms(ctx)
+
+    @commands.command(name="add")
+    async def addLevel(self, ctx):
+        'Adds a level code to the queue'
+        if self.canAddLevels or ctx.author.is_mod:
+            if len(self.levelQueue) < 5:
+                args = ctx.content.split()
+                code = args[1]
+                self.levelQueue.append(code)
+                await ctx.send(f"Your level is now in the queue {self.randShoutout(ctx.author.name)}")
+            else:
+                await ctx.send(f"The level queue is full, try again later {self.randShoutout(ctx.author.name)}")
+        else:
+            await ctx.send(f"The queue is not currently accepting new levels {self.randShoutout(ctx.author.name)}")
+
+    @commands.command(name="level")
+    async def currentLevel(self, ctx):
+        'Displays the current level code'
+        await self._currentLevel(ctx)
+    
+    @commands.command(name="nextLevel")
+    async def nextLevel(self, ctx):
+        'Pops the level off the queue and displays the next value'
+        if ctx.author.is_mod:
+            if len(self.levelQueue) > 0:
+                self.levelQueue.pop(0)
+                await self._currentLevel(ctx)
+            else:
+                await ctx.send(f"The level queue is empty {self.randShoutout(ctx.author.name)}")
+        else:
+            await self._noPerms(ctx)
     
     @commands.command(name="goodBot")
     async def goodBot(self, ctx):
@@ -179,6 +227,20 @@ class Bot(commands.Bot):
                 await ctx.send(f"Usage !cooldown <number> <sec/min/hour>")
             else:
                 await ctx.send(f"Set cooldown for {new_time}!")
+        else:
+            await self._noPerms(ctx)
+
+########################### Misc. Methods #####################################
+    async def _currentLevel(self, ctx):
+        'Displays the current level code'
+        if len(self.levelQueue) > 0:
+            await ctx.send(f"Level Code: {self.levelQueue[0]}")
+        else:
+            await ctx.send(f"The level queue is empty {self.randShoutout(ctx.author.name)}")
+    
+    async def _noPerms(self, ctx):
+        'Called when a user does not have permissions to use a command'
+        await ctx.send(f"{random.choice(self.noPerms)} {self.randShoutout(ctx.author.name)}")
 
 
 if __name__ == "__main__":
