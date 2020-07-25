@@ -72,8 +72,8 @@ class Bot(commands.Bot):
             "I aim to please",
             "You're alright",
             "All in a day's work",
-            "uwu",
-            "Hail to the king,",
+            "UwU",
+            "Hail to the king",
         ]
         self.jeers = [
             "You just made the list",
@@ -152,10 +152,10 @@ class Bot(commands.Bot):
                 await ctx.channel.send(f"{random.choice(self.quips)} {self.randShoutout(ctx.author.name)}")
 
         # Always say hi and bye if prompted.
-        if any(word in ctx.content.lower() for word in ("hello ", "hi ", "heya ")):
-            await ctx.channel.send(f"Hi, @{ctx.author.name}!")
-        elif any(word in ctx.content.lower() for word in ("bye ", "goodnight ")):
-            await ctx.channel.send(f"Bye, @{ctx.author.name}")
+        # if any(word in ctx.content.lower() for word in ("hello ", "hi ", "heya ")):
+        #     await ctx.channel.send(f"Hi, @{ctx.author.name}!")
+        # elif any(word in ctx.content.lower() for word in ("bye ", "goodnight ")):
+        #     await ctx.channel.send(f"Bye, @{ctx.author.name}")
 
 
 ############################## Commands #######################################
