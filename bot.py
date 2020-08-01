@@ -67,6 +67,25 @@ class Personality():
             "You don't have enough badges to train me",
             "No, no, a thousand times no"
         ]
+        self.garbageAdjective = [
+            "bad",
+            "garbage",
+            "trash",
+            "jank",
+            "disgusting",
+            "terrible",
+            "horrible",
+            "ridiculous",
+        ]
+        self.garbagePunchline = [
+            "Nintendo should deactivate this creator's account",
+            "my rage buffer is overflowing",
+            "I'm going to need a memory wipe after this",
+            "I'm not programmed to feel pain and it still hurts me to see this",
+            "it made Mario cry",
+            "I literally can't even",
+            "it's ruining Mario Maker for me",
+        ]
 
 
 class MarioPersonality(Personality):
@@ -182,7 +201,7 @@ class Bot(commands.Bot):
             elif any(word in ctx.content.lower() for word in self.vibe.badWords):
                 await ctx.channel.send(f"{random.choice(self.vibe.quips)} {self.randShoutout(ctx.author.name)}")
 
-        # Always say hi and bye if prompted.
+        # Always say hi and bye if prompted. Buggy af, leave commented until you figure out a batter parsing
         # if any(word in ctx.content.lower() for word in ("hello ", "hi ", "heya ")):
         #     await ctx.channel.send(f"Hi, @{ctx.author.name}!")
         # elif any(word in ctx.content.lower() for word in ("bye ", "goodnight ")):
@@ -309,6 +328,12 @@ class Bot(commands.Bot):
             if self.isPlayingSouls:
                 self.vibe = SoulsPersonality()
                 await ctx.send(f"{random.choice(self.vibe.soulsTime)}")
+    
+    @commands.command(name='garbage')
+    async def garbageLevel(self, ctx):
+        'Calls out a garbage level'
+        if ctx.author.is_mod:
+            await ctx.send(f"This level is so {random.choice(self.vibe.garbageAdjective)}, {random.choice(self.vibe.garbagePunchline)}")
 
 ########################### Misc. Methods #####################################
     async def _currentLevel(self, ctx):
