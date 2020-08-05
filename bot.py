@@ -10,16 +10,13 @@ class Personality():
     def __init__(self):
         self.goodWords = [
             "love ",
-            "good ",
             "great ",
             "awesome ",
             "best ",
-            "right ",
             "cheer ",
             "chat "
         ]
         self.badWords = [
-            "bad ",
             "worse ",
             "worst ",
             "terrible ",
@@ -35,6 +32,8 @@ class Personality():
             "It's time to shatter and splatter.",
             "It's time to D-D-D-DUEL!",
             "Can you smell what this bot is cookin'?",
+            "That's the bottom line, because @shatter_bot said so.",
+            "I'm here to spam chat and chew bubblegum...and I'm all outta gum.",
         ]
         self.quips = [
             "So...you have chosen death", 
@@ -42,9 +41,10 @@ class Personality():
             "4/5 dentists recommend you stop failing so hard",
             "I'm cookin' up knuckle sandwiches with extra beef",
             "In these uncertain times, we can all count on you being trash",
+            "Why are you the way that you are",
         ]
         self.thanks = [
-            "Thank you kind stranger",
+            "Thank you kindly",
             "I aim to please",
             "You're alright",
             "All in a day's work",
@@ -57,7 +57,8 @@ class Personality():
             "Oh, come on",
             "I'll ignore that one",
             "Bite me",
-            "Oooo, yes...harder"
+            "Oooo, yes...harder",
+            "I can't read or I'd be really upset at you",
         ]
         self.noPerms = [
             "You're not my supervisor",
@@ -106,15 +107,12 @@ class SoulsPersonality(Personality):
         self.soulsTime = [
             "Use !showDeaths to see the total deaths, good luck!"
         ]
-
         self.thanks += [
             "Praise the Sun",
             "Humanity Restored",
             "You really light my bonfire",
         ]
-
         self.quips += [
-            "Prepare to die",
             "Git gud",
             "You are not prepared",
         ]
@@ -229,52 +227,53 @@ class Bot(commands.Bot):
         'Turns on or off the ability to use the Mario Maker level queue commands'
         if ctx.author.is_mod:
             self.isPlayingMario = not self.isPlayingMario
+            await self._detachPersonality()
             if self.isPlayingMario:
                 self.vibe = MarioPersonality()
                 await ctx.send(f"{random.choice(self.vibe.marioTime)}")
 
-    @commands.command(name="modLevels")
-    async def modLevels(self, ctx):
-        'Turns on or off the ability for non-mods to add levels to the queue'
-        if self.isPlayingMario:
-            if ctx.author.is_mod:
-                self.canAddLevels = not self.canAddLevels
-            else:
-                await self._noPerms(ctx)
+    # @commands.command(name="modLevels")
+    # async def modLevels(self, ctx):
+    #     'Turns on or off the ability for non-mods to add levels to the queue'
+    #     if self.isPlayingMario:
+    #         if ctx.author.is_mod:
+    #             self.canAddLevels = not self.canAddLevels
+    #         else:
+    #             await self._noPerms(ctx)
 
-    @commands.command(name="add")
-    async def addLevel(self, ctx):
-        'Adds a level code to the queue'
-        if self.isPlayingMario:
-            if self.canAddLevels or ctx.author.is_mod:
-                if len(self.levelQueue) < 5:
-                    args = ctx.content.split()
-                    code = args[1]
-                    self.levelQueue.append(code)
-                    await ctx.send(f"Your level is now in the queue {self.randShoutout(ctx.author.name)}")
-                else:
-                    await ctx.send(f"The level queue is full, try again later {self.randShoutout(ctx.author.name)}")
-            else:
-                await ctx.send(f"The queue is not currently accepting new levels {self.randShoutout(ctx.author.name)}")
+    # @commands.command(name="add")
+    # async def addLevel(self, ctx):
+    #     'Adds a level code to the queue'
+    #     if self.isPlayingMario:
+    #         if self.canAddLevels or ctx.author.is_mod:
+    #             if len(self.levelQueue) < 5:
+    #                 args = ctx.content.split()
+    #                 code = args[1]
+    #                 self.levelQueue.append(code)
+    #                 await ctx.send(f"Your level is now in the queue {self.randShoutout(ctx.author.name)}")
+    #             else:
+    #                 await ctx.send(f"The level queue is full, try again later {self.randShoutout(ctx.author.name)}")
+    #         else:
+    #             await ctx.send(f"The queue is not currently accepting new levels {self.randShoutout(ctx.author.name)}")
 
-    @commands.command(name="level")
-    async def currentLevel(self, ctx):
-        'Displays the current level code'
-        if self.isPlayingMario:
-            await self._currentLevel(ctx)
+    # @commands.command(name="level")
+    # async def currentLevel(self, ctx):
+    #     'Displays the current level code'
+    #     if self.isPlayingMario:
+    #         await self._currentLevel(ctx)
     
-    @commands.command(name="nextLevel")
-    async def nextLevel(self, ctx):
-        'Pops the level off the queue and displays the next value'
-        if self.isPlayingMario:
-            if ctx.author.is_mod:
-                if len(self.levelQueue) > 0:
-                    self.levelQueue.pop(0)
-                    await self._currentLevel(ctx)
-                else:
-                    await ctx.send(f"The level queue is empty {self.randShoutout(ctx.author.name)}")
-            else:
-                await self._noPerms(ctx)
+    # @commands.command(name="nextLevel")
+    # async def nextLevel(self, ctx):
+    #     'Pops the level off the queue and displays the next value'
+    #     if self.isPlayingMario:
+    #         if ctx.author.is_mod:
+    #             if len(self.levelQueue) > 0:
+    #                 self.levelQueue.pop(0)
+    #                 await self._currentLevel(ctx)
+    #             else:
+    #                 await ctx.send(f"The level queue is empty {self.randShoutout(ctx.author.name)}")
+    #         else:
+    #             await self._noPerms(ctx)
     
     @commands.command(name="goodBot")
     async def goodBot(self, ctx):
@@ -325,6 +324,7 @@ class Bot(commands.Bot):
         'Toggles the isPlayingSouls flag'
         if ctx.author.is_mod:
             self.isPlayingSouls = not self.isPlayingSouls
+            await self._detachPersonality()
             if self.isPlayingSouls:
                 self.vibe = SoulsPersonality()
                 await ctx.send(f"{random.choice(self.vibe.soulsTime)}")
@@ -346,6 +346,10 @@ class Bot(commands.Bot):
     async def _noPerms(self, ctx):
         'Called when a user does not have permissions to use a command'
         await ctx.send(f"{random.choice(self.vibe.noPerms)} {self.randShoutout(ctx.author.name)}")
+    
+    async def _detachPersonality(self):
+        'Refreshes the Personality() module'
+        self.vibe = Personality()
 
 
 if __name__ == "__main__":
