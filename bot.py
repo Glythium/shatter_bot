@@ -87,6 +87,35 @@ class Personality():
             "I literally can't even",
             "it's ruining Mario Maker for me",
         ]
+        self.moodDescriptors = [
+            "ok, how are you",
+            "like a million bucks, thank you",
+            "pretty bad, how about you"
+        ]
+        self.deathWins = [
+            "Bots never die",
+            "You've activated my trap card",
+            "I'm not dead yet",
+            "Weep ye mortal, for you challenge a bot",
+            "Come back when you've mastered the art of NOT sucking",
+        ]
+        self.deathLosses = [
+            "'Tis but a flesh wound",
+            "Oof, got me",
+            "Tell my kids...00101011",
+            "You made me bleed my own blood",
+            "Game over man, GAME OVER",
+        ]
+        self.insults = [
+            "You're mother was a hamster and you're father smelled of elderberries",
+            "You smell like you eat 3 raw onions for lunch every day",
+            "Your existence is an affront to the rest of chat and nature at large",
+            "I was named mirror_bot, then you looked in me",
+            "You look like a gas station bathroom",
+            "I would rather stick my face in a wasp's nest than hang out with you",
+            "You are the human version of a headache",
+            "My middle finger salutes you",
+        ]
 
 
 class MarioPersonality(Personality):
@@ -115,6 +144,20 @@ class SoulsPersonality(Personality):
         self.quips += [
             "Git gud",
             "You are not prepared",
+        ]
+
+
+class JackboxPersonality(Personality):
+    def __init__(self):
+        super().__init__()
+        self.jackTime = [
+            "Let's get some Jack up in this box!"
+        ]
+        # self.thanks += [
+
+        # ]
+        self.quips += [
+            "You don't know Jack",
         ]
 
 
@@ -147,6 +190,9 @@ class CoolDownManager():
             self.start = time.time()
             return True
         return False
+    
+    def userCooldown(self, user):
+        pass
 
 
 class Bot(commands.Bot):
@@ -164,13 +210,18 @@ class Bot(commands.Bot):
         self.canAddLevels = True
         self.isPlayingMario = False
         self.isPlayingSouls = False
+        self.moodLevel = 0 # -1 == bad, 0 == normal, 1 == good moods
+        self.userLevelsMap = dict()
         self.state = dict()
         try:
             with open("state.json", "r+") as fp:
                 self.state = json.load(fp)
         except:
-            # Seed the state with all used values
-            self.state["deaths"] = 0
+            self.state = dict()
+
+        # Seed the state with all used values
+        self._seed_state()
+        
 
 ################################ Actual Functions #############################
     def randShoutout(self, username):
@@ -211,6 +262,14 @@ class Bot(commands.Bot):
     async def help(self, ctx):
         'Maybe could be a usage statement? WIP'
         await ctx.send(f"I can't help you, @{ctx.author.name}")
+    
+    @commands.command(name='hello')
+    async def hello(self, ctx):
+        'Say hello shatter_bot'
+        if ctx.author.name.lower() == "the_bourbonator":
+            await ctx.send(f"Hello meatbags, I am shatter_bot! Use !hello to say hi to me and my creator, @{ctx.author.name}!")
+        else:
+            await ctx.send(f"Hello {self.randShoutout(ctx.author.name)}")
 
     @commands.command(name='roll')
     async def roll(self, ctx):
@@ -241,20 +300,20 @@ class Bot(commands.Bot):
     #         else:
     #             await self._noPerms(ctx)
 
-    # @commands.command(name="add")
-    # async def addLevel(self, ctx):
-    #     'Adds a level code to the queue'
-    #     if self.isPlayingMario:
-    #         if self.canAddLevels or ctx.author.is_mod:
-    #             if len(self.levelQueue) < 5:
-    #                 args = ctx.content.split()
-    #                 code = args[1]
-    #                 self.levelQueue.append(code)
-    #                 await ctx.send(f"Your level is now in the queue {self.randShoutout(ctx.author.name)}")
-    #             else:
-    #                 await ctx.send(f"The level queue is full, try again later {self.randShoutout(ctx.author.name)}")
-    #         else:
-    #             await ctx.send(f"The queue is not currently accepting new levels {self.randShoutout(ctx.author.name)}")
+    @commands.command(name="add")
+    async def addLevel(self, ctx):
+        'Adds a level code to the queue'
+        if self.isPlayingMario:
+            requestor = ctx.author.name.lower()
+            code = ctx.content.lower().split()[1]
+            try:
+                print(f"{self.userLevelsMap[requestor]}")
+                if code in self.userLevelsMap[requestor]:
+                    await ctx.send(f"Level spam detected @{ctx.author.name}!")
+                    return
+            except:
+                self.userLevelsMap[requestor] = set()
+            self.userLevelsMap[requestor].add(code)
 
     # @commands.command(name="level")
     # async def currentLevel(self, ctx):
@@ -278,12 +337,21 @@ class Bot(commands.Bot):
     @commands.command(name="goodBot")
     async def goodBot(self, ctx):
         'Post a special message to chat'
+        if self.moodLevel < 1:
+            self.moodLevel += 1
         await ctx.send(f"{random.choice(self.vibe.thanks)} {self.randShoutout(ctx.author.name)}")
     
     @commands.command(name="badBot")
     async def badBot(self, ctx):
         'Post a special message to chat'
+        if self.moodLevel > -1:
+            self.moodLevel -= 1
         await ctx.send(f"{random.choice(self.vibe.jeers)} {self.randShoutout(ctx.author.name)}")
+    
+    @commands.command(name="mood")
+    async def mood(self, ctx):
+        'Let chat know what your mood is'
+        await ctx.send(f"I'm feeling {self.vibe.moodDescriptors[self.moodLevel]} {self.randShoutout(ctx.author.name)}")
     
     @commands.command(name='cooldown')
     async def setCooldown(self, ctx):
@@ -304,19 +372,26 @@ class Bot(commands.Bot):
     async def addDeath(self, ctx):
         'Another one bites the dust'
         if ctx.author.is_mod:
-            self.state["deaths"] += 1
-            await ctx.send(f"Total Deaths: {self.state['deaths']}")
+            self.state["souls" + self.soulsGame + "deaths"] += 1
+            self.state["totalDeaths"] += 1
+            idx = "souls" + self.soulsGame + "deaths"
+            await ctx.send(f"Dark Souls {self.soulsGame} Deaths: {self.state[idx]}")
     
     @commands.command(name='showDeaths')
     async def showDeaths(self, ctx):
         'Shows the number of deaths'
-        await ctx.send(f"Total Deaths: {self.state['deaths']}")
+        args = ctx.content.lower().split()
+        if len(args) > 1:
+            if args[1] in ("1", "2", "3"):
+                await ctx.send(f"Dark Souls {args[1]} Deaths: {self.state['souls' + args[1] + 'deaths']}")
+        else:
+            await ctx.send(f"Total Deaths: {self.state['totalDeaths']}")
     
     @commands.command(name='clearDeaths')
     async def clearDeaths(self, ctx):
         'Resets the number of deaths'
         if ctx.author.is_mod:
-            self.state["deaths"] = 0
+            self.state["souls" + self.soulsGame + "deaths"] = 0
             await ctx.send(f"Total deaths reset!")
     
     @commands.command(name='darkSouls')
@@ -326,14 +401,43 @@ class Bot(commands.Bot):
             self.isPlayingSouls = not self.isPlayingSouls
             await self._detachPersonality()
             if self.isPlayingSouls:
+                args = ctx.content.lower().split()
                 self.vibe = SoulsPersonality()
                 await ctx.send(f"{random.choice(self.vibe.soulsTime)}")
-    
+                if len(args) > 1:
+                    if args[1] in ("1", "2", "3"):
+                        self.soulsGame = args[1]
+                else:
+                    self.soulsGame = "1"
+
     @commands.command(name='garbage')
     async def garbageLevel(self, ctx):
         'Calls out a garbage level'
-        if ctx.author.is_mod:
-            await ctx.send(f"This level is so {random.choice(self.vibe.garbageAdjective)}, {random.choice(self.vibe.garbagePunchline)}")
+        await ctx.send(f"This level is so {random.choice(self.vibe.garbageAdjective)}, {random.choice(self.vibe.garbagePunchline)}")
+
+    # Track a list of added lvls, be toxic to spammers
+    @commands.command(name='die')
+    async def die(self, ctx):
+        'Dies...a bit on the inside'
+        winLoss = random.choice([self.vibe.deathWins, self.vibe.deathLosses])
+        await ctx.send(f"{random.choice(winLoss)} {self.randShoutout(ctx.author.name)}")
+    
+    @commands.command(name='insult')
+    async def insult(self, ctx):
+        'Insults someone'
+        try:
+            target = ctx.content.lower().split()[1]
+        except IndexError:
+            target = ctx.author.name
+        if target[0] == '@':
+            target = target[1:]
+        if target in ("shatter_bot", "yourself", "you"):
+            await ctx.send(f"@shatter_bot, you're so funny and cool")
+        else:
+            if target == "me":
+                target = ctx.author.name
+            await ctx.send(f"{random.choice(self.vibe.insults)} @{target}")
+
 
 ########################### Misc. Methods #####################################
     async def _currentLevel(self, ctx):
@@ -350,6 +454,21 @@ class Bot(commands.Bot):
     async def _detachPersonality(self):
         'Refreshes the Personality() module'
         self.vibe = Personality()
+
+    def _seed_state(self):
+        'Seeds the state file'
+        state_vars = [
+            "souls1deaths",
+            "souls2deaths",
+            "souls3deaths",
+            "totalDeaths",
+        ]
+        for k in state_vars:
+            try:
+                x = self.state[k]
+            except KeyError:
+                self.state[k] = 0
+
 
 
 if __name__ == "__main__":
